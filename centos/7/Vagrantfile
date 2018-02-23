@@ -1,0 +1,80 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+require 'fileutils'
+
+CONFIG = File.join(File.dirname(__FILE__), "config.rb")
+
+# provide default
+$vm_gui = false
+$vm_memory = 1024
+$vm_cpus = 2
+$shared_folders = {}
+$shared_files = {}
+$forwarded_ports = {}
+$storage = {}
+
+secured = ["ssh", "priv", "private", "pass", "passwd", "password"]
+
+if File.exist?(CONFIG)
+  require CONFIG
+end
+
+# All Vagrant configuration is done below. The "2" in Vagrant.configure
+# configures the configuration version (we support older styles for
+# backwards compatibility). Please don't change it unless you know what
+# you're doing.
+Vagrant.configure(2) do |config|
+
+  config.vm.box = "centos/7"
+  config.vm.box_check_update = true
+
+#  config.vbguest.auto_update = false
+
+  $forwarded_ports.each do |guest, host|
+     config.vm.network "forwarded_port", guest: guest, host: host, auto_correct: true
+  end
+
+  $shared_folders.each do |host_folder, guest_folder|
+    mounted = false
+    if File.exist?(host_folder)
+      secured.each do |secured_name|
+        if guest_folder.to_s.include? secured_name
+          config.vm.synced_folder host_folder.to_s, guest_folder.to_s, id: "private_" + secured_name, mount_options: ["dmode=700,fmode=600"]
+          mounted = true
+          break  
+        end  
+      end
+      if !mounted
+        config.vm.synced_folder host_folder.to_s, guest_folder.to_s
+      end
+    end
+  end
+
+  $shared_files.each do |host_file, guest_file|
+     if File.exist?(host_file)
+        config.vm.provision "file", source: host_file, destination: guest_file
+     end
+  end
+
+  config.vm.provider :virtualbox do |vb|
+     vb.gui = $vm_gui
+     vb.memory = $vm_memory
+     vb.cpus = $vm_cpus
+     vb.name = "centos7"
+   
+     $storage.each do |hdd, size|
+       if !File.exist?(hdd)
+         vb.customize ['createhd', '--filename', hdd, '--size', size]
+         vb.customize ['storageattach', :id, '--storagectl', 'IDE', '--port', 1, '--device', 0, '--type', 'hdd', '--medium', hdd]
+       end
+     end
+  end
+
+  config.vm.provision "shell", path: "provision.sh"
+
+  # client specific setup
+  if File.exist?('./client.sh')
+     config.vm.provision "shell", path: "client.sh"
+  end
+end

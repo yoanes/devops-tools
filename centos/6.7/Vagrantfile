@@ -1,0 +1,55 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+require 'fileutils'
+
+CONFIG = File.join(File.dirname(__FILE__), "config.rb")
+
+# provide default
+$vm_gui = false
+$vm_memory = 1024
+$vm_cpus = 1
+$shared_folders = {}
+$forwarded_ports = {}
+$shared_files = {}
+
+if File.exist?(CONFIG)
+  require CONFIG
+end
+
+# All Vagrant configuration is done below. The "2" in Vagrant.configure
+# configures the configuration version (we support older styles for
+# backwards compatibility). Please don't change it unless you know what
+# you're doing.
+Vagrant.configure(2) do |config|
+
+  config.vm.box = "nrel/CentOS-6.7-x86_64"
+
+  # always use Vagrants insecure key
+  config.ssh.insert_key = false
+
+  $forwarded_ports.each do |guest, host|
+     config.vm.network "forwarded_port", guest: guest, host: host, auto_correct: true
+  end
+
+  config.vm.network "private_network", ip: "192.168.33.20", virtualbox__intnet: true
+
+  $shared_folders.each do |host_folder, guest_folder|
+     config.vm.synced_folder host_folder.to_s, guest_folder.to_s 
+  end
+
+  $shared_files.each do |host_file, guest_file|
+     config.vm.provision "file", source: host_file, destination: guest_file  
+  end
+
+  config.vm.provider :virtualbox do |vb|
+     vb.gui = $vm_gui
+     vb.memory = $vm_memory
+     vb.cpus = $vm_cpus
+     vb.name = "centos67"
+  end
+
+  if File.exist?('./provision.sh')
+     config.vm.provision "shell", path: "provision.sh"
+  end
+end
