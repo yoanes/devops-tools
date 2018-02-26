@@ -1,8 +1,8 @@
 #!/bin/bash
 
 GIT_VERSION='2.12.2'
-DOCKER_MACHINE_VERSION='0.10.0'
-DOCKER_COMPOSE_VERSION='1.12.0'
+DOCKER_MACHINE_VERSION='0.13.0'
+DOCKER_COMPOSE_VERSION='1.19.0'
 
 pvcreate /dev/sdb
 pvscan
@@ -50,7 +50,7 @@ chmod 774 -R /var/log
 yum install -y -q bind-utils telnet net-tools wget unzip iproute util-linux-ng expect yum-utils jq nc vim-enhanced
 
 # Install java
-yum install -y --disablerepo=* /vagrant/jdk-8u73-linux-x64.rpm
+# yum install -y --disablerepo=* /vagrant/jdk-8u73-linux-x64.rpm
 
 # Install ruby
 yum install -y ruby ruby-devel
@@ -80,7 +80,7 @@ AWS_ACCESS_KEY=$(tail -n 1 /home/vagrant/AWS/accessKeys.csv | cut -f 1 -d ',')
 AWS_ACCESS_PWD=$(tail -n 1 /home/vagrant/AWS/accessKeys.csv | cut -f 2 -d ',')
 echo $AWS_ACCESS_KEY:$AWS_ACCESS_PWD > /etc/passwd-s3fs
 chmod 600 /etc/passwd-s3fs
-echo "yk-dev /mnt/backup fuse.s3fs auto,rw,_netdev,allow_other,endpoint=ap-southeast-2 0 0" >> /etc/fstab
+echo "yk-irexchange /mnt/backup fuse.s3fs auto,rw,_netdev,allow_other,endpoint=ap-southeast-2 0 0" >> /etc/fstab
 mount -a
 
 SYSD_OVERRIDE='/etc/systemd/system/docker.service.d/'
@@ -151,3 +151,12 @@ set incsearch
 set hlsearch
 EOT
 
+# Setup SSH AGENT
+cat <<EOT >> /home/vagrant/.bash_profile
+alias ws='cd /home/vagrant/workspace'
+
+if [ \$(pidof ssh-agent) == "" ]; then
+  eval $(ssh-agent -s)
+  find /home/vagrant/.ssh -name '*.key' | xargs -I {} ssh-add {}
+fi
+EOT
