@@ -155,8 +155,8 @@ EOT
 cat <<EOT >> /home/vagrant/.bash_profile
 alias ws='cd /home/vagrant/workspace'
 
-if [ \$(pidof ssh-agent) == "" ]; then
-  eval $(ssh-agent -s)
+if [ "\$(pidof ssh-agent)" == "" ]; then
+  eval \$(ssh-agent -s)
   find /home/vagrant/.ssh -name '*.key' | xargs -I {} ssh-add {}
 fi
 EOT
