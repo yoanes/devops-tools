@@ -1,5 +1,7 @@
 #!/bin/bash
 
+EMAIL='yoanes.koesno@irexchange.com'
+
 GIT_VERSION='2.12.2'
 DOCKER_MACHINE_VERSION='0.13.0'
 DOCKER_COMPOSE_VERSION='1.19.0'
@@ -136,6 +138,10 @@ make configure
 ./configure --prefix=/usr/local
 make install
 git --version
+
+# Configure GIT
+git config --global user.name "Yoanes Koesno"
+git config --global user.email "${EMAIL}"
 
 # Setup VIM
 mkdir -m 700 -p /home/vagrant/.vim/colors
