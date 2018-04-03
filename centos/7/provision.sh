@@ -49,7 +49,7 @@ chown root:vagrant /var/log
 chmod 774 -R /var/log
 
 # Install utility
-yum install -y -q bind-utils telnet net-tools wget unzip iproute util-linux-ng expect yum-utils jq nc vim-enhanced
+yum install -y -q bind-utils telnet net-tools wget unzip iproute util-linux-ng expect yum-utils jq nc vim-enhanced graphviz
 
 # Install java
 # yum install -y --disablerepo=* /vagrant/jdk-8u73-linux-x64.rpm
